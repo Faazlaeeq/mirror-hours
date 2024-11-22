@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import 'services/notification_service.dart';
 import 'models/mirror_hour.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService().initNotification();
+
+  final NotificationService notificationService = NotificationService();
+  await notificationService.initNotification();
+
   await Permission.notification.request();
+
   runApp(const MyApp());
 }
 
@@ -92,7 +94,7 @@ class _MirrorHoursPageState extends State<MirrorHoursPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Notification activée')),
         );
-        await _notificationService.printAllScheduledNotifications();
+        // await _notificationService.printAllScheduledNotifications();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Erreur lors de l\'activation de la notification')),
@@ -130,7 +132,7 @@ class _MirrorHoursPageState extends State<MirrorHoursPage> {
           final oneMinuteLater = now.add(const Duration(minutes: 1));
           final String hour = oneMinuteLater.hour.toString().padLeft(2, '0');
           final String minute = oneMinuteLater.minute.toString().padLeft(2, '0');
-          final String time = '${hour}h${minute}';
+          final String time = '${hour}h$minute';
           final String message = 'Notification set for $time';
 
           setState(() {

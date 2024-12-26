@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mirror/home_screen.dart';
-import 'package:mirror/screens/alarm_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'services/notification_service2.dart';
 
@@ -23,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mirror Hours',
+      title: 'Heures Miroirs',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mirror/models/mirror_hour.dart';
 import 'package:mirror/services/notification_service2.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 class MirrorHoursPage extends StatefulWidget {
   const MirrorHoursPage({super.key});
 
@@ -11,8 +12,10 @@ class MirrorHoursPage extends StatefulWidget {
 }
 
 class _MirrorHoursPageState extends State<MirrorHoursPage> {
+
   final NotificationService _notificationService = NotificationService();
-  final List<MirrorHour> mirrorHours = [
+
+   List<MirrorHour> mirrorHours = [
     MirrorHour(time: "19h08", message: "Renouveau, un nouveau départ"),
     MirrorHour(time: "01h01", message: "Quelqu'un t'aime"),
     MirrorHour(time: "01h10", message: "Écoute tes intuitions"),
@@ -51,10 +54,50 @@ class _MirrorHoursPageState extends State<MirrorHoursPage> {
     MirrorHour(time: "23h32", message: "Sérénité et paix intérieure")
   ];
 
+ @override
+void initState() {
+  super.initState();
+  loadMirrorHours();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    }
+  });
+}
+
+  Future<void> loadMirrorHours() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? savedHours = prefs.getString('mirror_hours');
+    
+    if (savedHours != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(savedHours);
+        setState(() {
+          mirrorHours = decoded.map((item) => MirrorHour.fromJson(item)).toList();
+        });
+      } catch (e) {
+        print('Erreur lors du chargement des heures miroirs: $e');
+      }
+    }
+  }
+
+
+  Future<void> saveMirrorHours() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String encoded = jsonEncode(mirrorHours.map((e) => e.toJson()).toList());
+      await prefs.setString('mirror_hours', encoded);
+    } catch (e) {
+      print('Erreur lors de lenregistrement des heures miroirs: $e');
+    }
+  }
+
+
   void _toggleNotification(int index) async {
     setState(() {
       mirrorHours[index].isEnabled = !mirrorHours[index].isEnabled;
     });
+
     if (mirrorHours[index].isEnabled) {
       try {
         var status = await Permission.notification.request();
@@ -67,7 +110,6 @@ class _MirrorHoursPageState extends State<MirrorHoursPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Notification activée')),
         );
-        // await _notificationService.printAllScheduledNotifications();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Erreur lors de l\'activation de la notification')),
@@ -76,7 +118,11 @@ class _MirrorHoursPageState extends State<MirrorHoursPage> {
     } else {
       NotificationService.cancelNotifications(index);
     }
+    
+    // Save state after toggling
+    await saveMirrorHours();
   }
+
 
   Future<void> checkNotificationPermissions() async {
     final status = await Permission.notification.status;
@@ -88,83 +134,29 @@ class _MirrorHoursPageState extends State<MirrorHoursPage> {
     }
   }
 
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       appBar: AppBar(
-        title: const Text('Mirror Hours'),
+        title: const Text('Heures Miroirs'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: ListView.builder(
-        reverse: true,
-        controller: _scrollController,
-        itemCount: mirrorHours.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(mirrorHours[index].time),
-            subtitle: Text(mirrorHours[index].message),
-            trailing: Switch(
-              value: mirrorHours[index].isEnabled,
-              onChanged: (_) => _toggleNotification(index),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // FloatingActionButton(
-          //   onPressed: () async {
-          //     await _notificationService.showTestNotification();
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       const SnackBar(content: Text('Test notification sent')),
-          //     );
-          //   },
-          //   child: const Icon(Icons.notification_add),
-          // ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () async {
-              final now = DateTime.now();
-              final oneMinuteLater = now.add(const Duration(minutes: 1));
-              final String hour = oneMinuteLater.hour.toString().padLeft(2, '0');
-              final String minute = oneMinuteLater.minute.toString().padLeft(2, '0');
-              final String time = '${hour}h$minute';
-              final String message = 'Notification set for $time';
-
-              setState(() {
-                mirrorHours.add(MirrorHour(time: time, message: message, isEnabled: true));
-                _scrollController.animateTo(
-                  _scrollController.position.maxScrollExtent,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              });
-
-              await _notificationService.scheduleNotification(
-                mirrorHours.length - 1,
-                time,
-                message,
-              );
-              // // try {
-              // //   await _notificationService.scheduleNotificationDirect();
-              // // } catch (e) {
-              // //   print(e);
-              // // }
-              // _notificationService.scheduleNotification(
-              //   index,
-              //   "my app Notification",
-              //   5,
-              // );
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Notification set for $time')),
-              );
-            },
-            child: const Text("Test  in 1 minute"),
+      reverse: true,
+      controller: _scrollController,
+      itemCount: mirrorHours.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(mirrorHours[index].time),
+          trailing: Switch(
+            value: mirrorHours[index].isEnabled,
+            onChanged: (_) => _toggleNotification(index),
           ),
-        ],
+          // Hide subtitle by not including it
+        );
+      },
       ),
     );
   }

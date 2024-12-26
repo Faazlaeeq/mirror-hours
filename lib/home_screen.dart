@@ -18,17 +18,17 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(
+              const SizedBox(
                 height: 50,
               ),
               const Text("Houruoh", style: TextStyle(fontSize: 40, color: Color(0xffffffff), fontFamily: 'Mouldy')),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               const Padding(
                 padding: EdgeInsets.only(left: 20, right: 20, top: 100),
                 child: Text(
-                    "A “Mirror Hour” is an hour with double figures. It usually shows itself to you accidentally when you look at your phone, your watch, or any other device which shows the time in a digital format. This can give you a strange feeling, especially when the same double hour appears to you regularly.",
+                    "Une Heure Miroir est une heure aux chiffres doubles. Elle se manifeste généralement de manière fortuite lorsque vous regardez votre téléphone, votre montre ou tout autre appareil qui affiche l'heure en format numérique. Cela peut vous donner une sensation étrange, particulièrement lorsque la même heure double vous apparaît régulièrement.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 16,
@@ -47,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text("Manage Mirror Hours",
+                    child: Text("Gérer les Heures Miroirs",
                         style: TextStyle(
                           color: Color(0xff2C1542),
                           fontSize: 16,
